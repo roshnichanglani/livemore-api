@@ -1,6 +1,5 @@
 package com.roshni.livemoreapi.security;
 
-import com.roshni.livemoreapi.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,7 +28,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final CustomUserDetailsService customUserDetailsService;
+    private final UserDetailsServiceImpl userDetailsService;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -50,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Long userId = jwtUtil.getUserIdFromToken(jwt);
 
                 //Load user details
-                UserDetails userDetails = customUserDetailsService.loadUserById(userId);
+                UserDetails userDetails = userDetailsService.loadUserById(userId);
 
                 //Create authentication token
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
