@@ -1,6 +1,7 @@
 package com.roshni.livemoreapi.service;
 
 import com.roshni.livemoreapi.entity.User;
+import com.roshni.livemoreapi.exception.ResourceNotFoundException;
 import com.roshni.livemoreapi.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -42,7 +43,7 @@ public class UserServiceImpl implements  UserService {
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .filter(u -> !u.isDeleted())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
         user.setDeleted(true);
         userRepository.save(user);
@@ -53,7 +54,7 @@ public class UserServiceImpl implements  UserService {
     public User updateUser(Long id, User updatedUser) {
         User existingUser = userRepository.findById(id)
                 .filter(user -> !user.isDeleted())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
         if(updatedUser.getBio() != null) {
             existingUser.setBio(updatedUser.getBio());

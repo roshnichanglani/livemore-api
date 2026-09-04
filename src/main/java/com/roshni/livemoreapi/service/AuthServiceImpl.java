@@ -7,12 +7,15 @@ import com.roshni.livemoreapi.dto.response.AuthResponse;
 import com.roshni.livemoreapi.dto.response.UserResponse;
 import com.roshni.livemoreapi.entity.User;
 import com.roshni.livemoreapi.enums.Role;
+import com.roshni.livemoreapi.exception.BadRequestException;
+import com.roshni.livemoreapi.exception.UnauthorizedException;
 import com.roshni.livemoreapi.security.JwtUtil;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,10 +28,11 @@ public class AuthServiceImpl implements AuthService{
     private long accessTokenExpiration;
 
     @Override
+    @Transactional
     public AuthResponse register(RegisterRequest registerRequest) {
 
         if(userService.existsByEmail(registerRequest.getEmail())) {
-            throw new RuntimeException("Email already registered: " + registerRequest.getEmail());
+            throw new BadRequestException("Email already registered: " + registerRequest.getEmail());
         }
 
         // Create new user with hashed password
@@ -49,14 +53,15 @@ public class AuthServiceImpl implements AuthService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest loginRequest) {
         // Find user by email
         User user = userService.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
         // Verify password
         if(!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new UnauthorizedException("Invalid email or password");
         }
 
         // Generate tokens and return response
@@ -64,25 +69,26 @@ public class AuthServiceImpl implements AuthService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AuthResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
         String refreshToken = refreshTokenRequest.getRefreshToken();
 
         //validate
         if(!jwtUtil.validateToken(refreshToken)) {
-            throw new RuntimeException("Invalid or expired refresh token");
+            throw new UnauthorizedException("Invalid or expired refresh token");
         }
 
         // type is refresh not access
         Claims claims = jwtUtil.extractAllClaims(refreshToken);
         String tokenType = claims.get("type", String.class);
         if(!"refresh".equals(tokenType)) {
-            throw  new RuntimeException("Invalid token type");
+            throw  new UnauthorizedException("Invalid token type");
         }
 
         // Get user from token
         Long userId = jwtUtil.getUserIdFromToken(refreshToken);
         User user = userService.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
 
         return buildAuthResponse(user);
     }
