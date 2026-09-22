@@ -49,11 +49,23 @@ public class Event {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private EventStatus status;
+    @Builder.Default
+    private EventStatus status = EventStatus.DRAFT;
 
     @Column(name = "is_featured", nullable = false)
     @Builder.Default
     private Boolean isFeatured = false;
+
+    @Column(name = "view_count", nullable = false)
+    @Builder.Default
+    private Integer viewCount = 0;
+
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
+
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
 
     @Column(name = "age_restriction", length = 20)
     private String ageRestriction;
