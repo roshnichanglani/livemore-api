@@ -7,6 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "events")
@@ -86,4 +88,7 @@ public class Event {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "event", cascade =  CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<TicketTier> ticketTiers = new ArrayList<>();
 }
